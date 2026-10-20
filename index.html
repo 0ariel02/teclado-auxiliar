@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GitHub Shortcuts Trainer (Mobile)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        .key-btn {
+            transition: all 0.1s ease;
+            box-shadow: 0 4px 0 #1f2937;
+        }
+        .key-btn:active, .key-btn.active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #1f2937;
+            background-color: #374151;
+        }
+        .key-modifier {
+            font-size: 0.75rem;
+            background-color: #374151;
+            color: #9ca3af;
+        }
+        .key-modifier.active {
+            background-color: #2563eb;
+            color: white;
+        }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Prevenir zoom en inputs en iOS */
+        input, button { font-size: 16px; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col font-sans">
+
+    <!-- Header -->
+    <header class="bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-10">
+        <div class="flex justify-between items-center max-w-md mx-auto">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                GH Shortcuts
+            </h1>
+            <div class="text-sm font-mono bg-gray-700 px-3 py-1 rounded-full">
+                Puntos: <span id="score" class="text-green-400 font-bold">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col max-w-md mx-auto w-full p-4 gap-4">
+        
+        <!-- Category Selector -->
+        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <button onclick="setCategory('all')" class="cat-btn active whitespace-nowrap px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium transition">Todos</button>
+            <button onclick="setCategory('sitio')" class="cat-btn whitespace-nowrap px-4 py-2 bg-gray-700 rounded-lg text-sm font-medium transition">Sitio</button>
+            <button onclick="setCategory('repositorio')" class="cat-btn whitespace-nowrap px-4 py-2 bg-gray-700 rounded-lg text-sm font-medium transition">Repositorio</button>
+            <button onclick="setCategory('codigo')" class="cat-btn whitespace-nowrap px-4 py-2 bg-gray-700 rounded-lg text-sm font-medium transition">Código</button>
+            <button onclick="setCategory('issues')" class="cat-btn whitespace-nowrap px-4 py-2 bg-gray-700 rounded-lg text-sm font-medium transition">Issues/PR</button>
+        </div>
+
+        <!-- Question Card -->
+        <div id="question-card" class="bg-gray-800 border border-gray-700 rounded-xl p-6 text-center fade-in min-h-[160px] flex flex-col justify-center items-center">
+            <p class="text-gray-400 text-sm uppercase tracking-wider mb-2">¿Cómo realizas esta acción?</p>
+            <h2 id="question-text" class="text-xl font-bold text-white mb-4">Cargando...</h2>
+            <div id="expected-keys" class="flex gap-2 justify-center flex-wrap"></div>
+        </div>
+
+        <!-- Feedback Message -->
+        <div id="feedback" class="text-center h-8 font-bold text-lg"></div>
+
+        <!-- Virtual Keyboard -->
+        <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 mt-auto">
+            <!-- Modifiers -->
+            <div class="flex gap-2 mb-3 justify-center">
+                <button class="key-btn key-modifier px-4 py-3 rounded-lg font-bold" onclick="pressKey('Ctrl')">Ctrl</button>
+                <button class="key-btn key-modifier px-4 py-3 rounded-lg font-bold" onclick="pressKey('Alt')">Alt</button>
+                <button class="key-btn key-modifier px-4 py-3 rounded-lg font-bold" onclick="pressKey('Shift')">Shift</button>
+                <button class="key-btn key-modifier px-4 py-3 rounded-lg font-bold" onclick="pressKey('Cmd')">Cmd</button>
+            </div>
+            <!-- Letters Grid -->
+            <div class="grid grid-cols-7 gap-2 mb-3" id="letter-keys">
+                <!-- Generated by JS -->
+            </div>
+            <!-- Special Keys -->
+            <div class="flex gap-2 justify-center flex-wrap">
+                <button class="key-btn px-4 py-3 bg-gray-700 rounded-lg font-mono text-sm" onclick="pressKey('.')">.</button>
+                <button class="key-btn px-4 py-3 bg-gray-700 rounded-lg font-mono text-sm" onclick="pressKey('>')">&gt;</button>
+                <button class="key-btn px-4 py-3 bg-gray-700 rounded-lg font-mono text-sm" onclick="pressKey('/')">/</button>
+                <button class="key-btn px-4 py-3 bg-gray-700 rounded-lg font-mono text-sm" onclick="pressKey('?')">?</button>
+                <button class="key-btn px-6 py-3 bg-gray-700 rounded-lg font-mono text-sm" onclick="pressKey('Enter')">Enter</button>
+                <button class="key-btn px-6 py-3 bg-red-900/50 text-red-300 rounded-lg font-bold text-sm ml-2" onclick="clearInput()">Borrar</button>
+            </div>
+        </div>
+
+        <!-- Current Input Display -->
+        <div class="bg-gray-950 border border-gray-700 rounded-lg p-3 text-center font-mono text-lg min-h-[50px] flex items-center justify-center gap-2" id="input-display">
+            <span class="text-gray-500 text-sm">Toca las teclas aquí...</span>
+        </div>
+
+        <button onclick="nextQuestion()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-green-900/20">
+            Saltar / Siguiente
+        </button>
+    </main>
+
+    <script>
+        // Base de datos de atajos (extraída y adaptada del prompt)
+        const shortcuts = [
+            { action: "Enfocar la barra de búsqueda", keys: ["S"], category: "sitio" },
+            { action: "Enfocar la barra de búsqueda", keys: ["/"], category: "sitio" },
+            { action: "Ir a tus notificaciones", keys: ["G", "N"], category: "sitio" },
+            { action: "Ir a la pestaña Código", keys: ["G", "C"], category: "repositorio" },
+            { action: "Ir a la pestaña Problemas (Issues)", keys: ["G", "I"], category: "repositorio" },
+            { action: "Ir a la pestaña Pull Requests", keys: ["G", "P"], category: "repositorio" },
+            { action: "Ir a la pestaña Acciones", keys: ["G", "A"], category: "repositorio" },
+            { action: "Ir a la pestaña Wiki", keys: ["G", "W"], category: "repositorio" },
+            { action: "Abrir editor github.dev (misma pestaña)", keys: ["."], category: "codigo" },
+            { action: "Abrir editor github.dev (nueva pestaña)", keys: [">"], category: "codigo" },
+            { action: "Buscar archivo (File Finder)", keys: ["t"], category: "codigo" },
+            { action: "Saltar a una línea", keys: ["l"], category: "codigo" },
+            { action: "Cambiar de rama o etiqueta", keys: ["w"], category: "codigo" },
+            { action: "Expandir URL a forma canónica", keys: ["y"], category: "codigo" },
+            { action: "Mostrar/ocultar comentarios en diffs", keys: ["i"], category: "codigo" },
+            { action: "Crear un nuevo problema (Issue)", keys: ["c"], category: "issues" },
+            { action: "Filtrar por autor", keys: ["u"], category: "issues" },
+            { action: "Filtrar por etiquetas", keys: ["l"], category: "issues" },
+            { action: "Filtrar por hitos (Milestones)", keys: ["m"], category: "issues" },
+            { action: "Solicitar un revisor (PR)", keys: ["q"], category: "issues" },
+            { action: "Enviar un comentario", keys: ["Ctrl", "Enter"], category: "issues" },
+            { action: "Buscar en el editor de archivos", keys: ["Ctrl", "F"], category: "codigo" },
+            { action: "Texto en negrita (Markdown)", keys: ["Ctrl", "B"], category: "codigo" },
+            { action: "Texto en cursiva (Markdown)", keys: ["Ctrl", "I"], category: "codigo" }
+        ];
+
+        let currentCategory = 'all';
+        let currentShortcut = null;
+        let currentInput = [];
+        let score = 0;
+        let activeModifiers = new Set();
+
+        // Inicializar teclado de letras
+        const letters = "abcdefghijklmnopqrstuvwxyz".split("");
+        const letterGrid = document.getElementById('letter-keys');
+        letters.forEach(char => {
+            const btn = document.createElement('button');
+            btn.className = "key-btn bg-gray-700 text-white font-bold py-3 rounded-lg uppercase";
+            btn.textContent = char;
+            btn.onclick = () => pressKey(char.toUpperCase());
+            letterGrid.appendChild(btn);
+        });
+
+        function setCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-gray-700', 'text-gray-300');
+            });
+            event.target.classList.remove('bg-gray-700', 'text-gray-300');
+            event.target.classList.add('bg-blue-600', 'text-white');
+            nextQuestion();
+        }
+
+        function getNextShortcut() {
+            const pool = currentCategory === 'all' ? shortcuts : shortcuts.filter(s => s.category === currentCategory);
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        function nextQuestion() {
+            currentShortcut = getNextShortcut();
+            currentInput = [];
+            activeModifiers.clear();
+            updateInputDisplay();
+            clearFeedback();
+            
+            // Animación de tarjeta
+            const card = document.getElementById('question-card');
+            card.classList.remove('fade-in');
+            void card.offsetWidth; // trigger reflow
+            card.classList.add('fade-in');
+
+            document.getElementById('question-text').textContent = currentShortcut.action;
+            
+            // Mostrar pistas si se desea (opcional, actualmente oculto para modo difícil, o descomentar para mostrar)
+            // document.getElementById('expected-keys').innerHTML = currentShortcut.keys.map(k => `<kbd class="px-2 py-1 bg-gray-700 rounded text-xs">${k}</kbd>`).join(' + ');
+        }
+
+        function pressKey(key) {
+            // Manejar modificadores
+            if (['Ctrl', 'Alt', 'Shift', 'Cmd'].includes(key)) {
+                if (activeModifiers.has(key)) {
+                    activeModifiers.delete(key);
+                } else {
+                    activeModifiers.add(key);
+                }
+                updateModifierVisuals();
+                return;
+            }
+
+            // Si hay modificadores activos, se combinan
+            if (activeModifiers.size > 0) {
+                currentInput = [...Array.from(activeModifiers), key];
+            } else {
+                currentInput.push(key);
+            }
+
+            // Vibración háptica ligera en móviles
+            if (navigator.vibrate) navigator.vibrate(10);
+
+            updateInputDisplay();
+            checkAnswer();
+            
+            // Resetear modificadores después de una tecla normal
+            activeModifiers.clear();
+            updateModifierVisuals();
+        }
+
+        function updateModifierVisuals() {
+            document.querySelectorAll('.key-modifier').forEach(btn => {
+                if (activeModifiers.has(btn.textContent)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function updateInputDisplay() {
+            const display = document.getElementById('input-display');
+            if (currentInput.length === 0) {
+                display.innerHTML = '<span class="text-gray-500 text-sm">Toca las teclas aquí...</span>';
+            } else {
+                display.innerHTML = currentInput.map(k => 
+                    `<kbd class="px-3 py-1 bg-blue-600 text-white rounded font-bold shadow">${k}</kbd>`
+                ).join(' <span class="text-gray-500">+</span> ');
+            }
+        }
+
+        function checkAnswer() {
+            // Comparar arrays (orden importa para secuencias como G + C)
+            const isCorrect = JSON.stringify(currentInput) === JSON.stringify(currentShortcut.keys);
+            
+            if (isCorrect) {
+                score += 10;
+                document.getElementById('score').textContent = score;
+                showFeedback('¡Correcto! 🎉', 'text-green-400');
+                if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+                setTimeout(nextQuestion, 800);
+            } else if (currentInput.length >= currentShortcut.keys.length) {
+                // Si la longitud coincide pero no es correcto, o es demasiado largo
+                const currentStr = currentInput.join('');
+                const expectedStr = currentShortcut.keys.join('');
+                if (currentStr.length >= expectedStr.length && currentStr !== expectedStr) {
+                    showFeedback('Incorrecto, intenta de nuevo', 'text-red-400');
+                    if (navigator.vibrate) navigator.vibrate(50);
+                    setTimeout(() => {
+                        currentInput = [];
+                        updateInputDisplay();
+                        clearFeedback();
+                    }, 600);
+                }
+            }
+        }
+
+        function showFeedback(msg, colorClass) {
+            const fb = document.getElementById('feedback');
+            fb.textContent = msg;
+            fb.className = `text-center h-8 font-bold text-lg fade-in ${colorClass}`;
+        }
+
+        function clearFeedback() {
+            document.getElementById('feedback').textContent = '';
+        }
+
+        function clearInput() {
+            currentInput = [];
+            activeModifiers.clear();
+            updateModifierVisuals();
+            updateInputDisplay();
+            clearFeedback();
+        }
+
+        // Soporte para teclado físico (por si se usa con teclado bluetooth en el móvil)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ') return; // Evitar scroll
+            let key = e.key;
+            if (key === 'Control') key = 'Ctrl';
+            if (key === 'Meta') key = 'Cmd';
+            if (key === 'Escape') {
+                clearInput();
+                return;
+            }
+            
+            // Mapeo simple para teclado físico
+            if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) {
+                // Manejo básico de combinaciones físicas
+                let mods = [];
+                if (e.ctrlKey) mods.push('Ctrl');
+                if (e.altKey) mods.push('Alt');
+                if (e.shiftKey) mods.push('Shift');
+                if (e.metaKey) mods.push('Cmd');
+                mods.push(key.length === 1 ? key.toUpperCase() : key);
+                currentInput = mods;
+            } else {
+                currentInput.push(key.length === 1 ? key.toUpperCase() : key);
+            }
+            updateInputDisplay();
+            checkAnswer();
+            if (currentInput.length > 0 && !['Ctrl','Alt','Shift','Cmd'].includes(key)) {
+                currentInput = []; // Reset para siguiente secuencia
+            }
+        });
+
+        // Iniciar
+        nextQuestion();
+    </script>
+</body>
+</html>
